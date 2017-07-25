@@ -1,5 +1,7 @@
 include ../py/mkenv.mk
 
+# qstr definitions (must come before including py.mk)
+QSTR_DEFS = qstrdefsport.h
 
 MICROPY_PY_USSL = 0
 MICROPY_SSL_AXTLS = 0
@@ -19,7 +21,7 @@ FROZEN_MPY_DIR = modules
 # include py core make definitions
 include ../py/py.mk
 
-PORT ?= /dev/ttyUSB0
+PORT ?= /dev/ttyACM0
 BAUD ?= 460800
 FLASH_MODE ?= dio
 FLASH_FREQ ?= 40m
@@ -34,7 +36,7 @@ ESPCOMP = $(ESPIDF)/components
 ESPTOOL ?= $(ESPCOMP)/esptool_py/esptool/esptool.py
 
 # verify the ESP IDF version
-ESPIDF_SUPHASH := 4ec2abbf23084ac060679e4136fa222a2d0ab0e8
+ESPIDF_SUPHASH := 9b955f4c9f1b32652ea165d3e4cdaad01bba170e
 ESPIDF_CURHASH := $(shell git -C $(ESPIDF) show -s --pretty=format:'%H')
 ifneq ($(ESPIDF_CURHASH),$(ESPIDF_SUPHASH))
 $(info ** WARNING **)
@@ -75,6 +77,73 @@ INC += -I$(ESPCOMP)/freertos/include
 INC += -I$(ESPCOMP)/tcpip_adapter/include
 INC += -I$(ESPCOMP)/lwip/include/lwip
 INC += -I$(ESPCOMP)/lwip/include/lwip/port
+INC += -I$(ESPCOMP)/lwip/include/lwip/posix
+INC += -I$(ESPCOMP)/mbedtls/include
+INC += -I$(ESPCOMP)/mbedtls/port/include
+INC += -I$(ESPCOMP)/spi_flash/include
+INC += -I$(ESPCOMP)/vfs/include
+INC += -I$(ESPCOMP)/newlib/platform_include
+INC += -I$(ESPCOMP)/xtensa-debug-module/include
+INC += -I$(ESPCOMP)/wpa_supplicant/include
+INC += -I$(ESPCOMP)/wpa_supplicant/port/include
+INC += -I$(ESPCOMP)/ethernet/include
+INC += -I$(ESPCOMP)/app_trace/include
+INC += -I$(ESPCOMP)/nghttp/include
+
+# Include dirs for both BT and MAIN
+INC_COMMON =  -I.
+INC_COMMON += -I..
+INC_COMMON += -I$(BUILD)
+INC_COMMON += -I$(ESPCOMP)/log/include
+INC_COMMON += -I$(ESPCOMP)/esp32/include
+INC_COMMON += -I$(ESPCOMP)/soc/esp32/include
+INC_COMMON += -I$(ESPCOMP)/freertos/include
+INC_COMMON += -I$(ESPCOMP)/tcpip_adapter/include
+INC_COMMON += -I$(ESPCOMP)/lwip/include/lwip
+INC_COMMON += -I$(ESPCOMP)/lwip/include/lwip/port
+INC_COMMON += -I$(ESPCOMP)/driver/include/driver
+INC_COMMON += -I$(ESPCOMP)/driver/include
+INC_COMMON += -I$(ESPCOMP)/nvs_flash/include
+
+# Include dirs for main code base, excluding BT
+INC_MAIN += -I../lib/mp-readline
+INC_MAIN += -I../lib/netutils
+INC_MAIN += -I../lib/timeutils
+INC_MAIN += -I$(ESPCOMP)/spi_flash/include
+INC_MAIN += -I$(ESPCOMP)/bootloader_support/include
+INC_MAIN += -I$(ESPCOMP)/nghttp/port/include
+INC_MAIN += -I$(ESPCOMP)/nghttp/include
+INC_MAIN += -I$(ESPCOMP)/ethernet/include
+INC_MAIN += -I$(ESPCOMP)/expat/include/expat
+INC_MAIN += -I$(ESPCOMP)/expat/port/include
+INC_MAIN += -I$(ESPCOMP)/json/include
+INC_MAIN += -I$(ESPCOMP)/json/port/include
+INC_MAIN += -I$(ESPCOMP)/newlib/include
+INC_MAIN += -I$(ESPCOMP)/lwip/include/lwip/port
+INC_MAIN += -I$(ESPCOMP)/lwip/include/lwip/posix
+INC_MAIN += -I$(ESPCOMP)/mbedtls/include
+INC_MAIN += -I$(ESPCOMP)/mbedtls/port/include
+INC_MAIN += -I$(ESPCOMP)/vfs/include
+INC_MAIN += -I$(ESPCOMP)/newlib/platform_include
+INC_MAIN += -I$(ESPCOMP)/xtensa-debug-module/include
+INC_MAIN += -I$(ESPCOMP)/wpa_supplicant/include
+INC_MAIN += -I$(ESPCOMP)/wpa_supplicant/port/include
+INC_MAIN += -I$(ESPCOMP)/ethernet/include
+INC_MAIN += -I$(ESPCOMP)/tcpip_adapter/include
+INC_MAIN += -I$(ESPCOMP)/app_trace/include
+INC_MAIN += -I$(ESPCOMP)/nghttp/port/include
+INC_MAIN += -I$(ESPCOMP)/nghttp/nghttp2/lib/includes
+
+
+# Bluetooth includes have to be separate because
+# esp-idf/components/bt/bluedroid/osi/include/list.h
+# somehow interferes with compiling FreeRTOS, as it
+# makes List_t "not defined."
+#
+# This is why we have separate build rules for
+# objects in the /bt/ directory, and for
+# the MicroPython esp32/network_bluetooth.c
+
 # Include dirs for BT components
 INC_BT = 
 INC_BT += -I$(ESPCOMP)/bt/bluedroid/api/include/
@@ -98,7 +167,8 @@ INC_BT += -I$(ESPCOMP)/bt/bluedroid/stack/smp/include/
 INC_BT += -I$(ESPCOMP)/bt/include
 INC_BT += -I$(ESPCOMP)/bt/bluedroid/stack/sdp/include/
 
-CFLAGS = -std=gnu99 -Os -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib -Wall -Werror -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-error=deprecated-declarations -DMBEDTLS_CONFIG_FILE='"mbedtls/esp_config.h"' -DHAVE_CONFIG_H -DESP_PLATFORM  $(INC)
+CFLAGS = -std=gnu99 -Os -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib -Wall -Werror -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-error=deprecated-declarations -DMBEDTLS_CONFIG_FILE='"mbedtls/esp_config.h"' -DHAVE_CONFIG_H -DESP_PLATFORM 
+
 ifeq ($(MICROPY_ESP32_BLUETOOTH),1)
 CFLAGS += -DMICROPY_ESP32_BLUETOOTH=1
 endif
@@ -107,7 +177,8 @@ CFLAGS += -DIDF_VER=\"$(IDF_VER)\"
 CFLAGS += $(CFLAGS_MOD)
 
 # this is what ESPIDF uses for c++ compilation
-CXXFLAGS = -std=gnu++11 -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib -Wall -Werror -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-error=deprecated-declarations -DESP_PLATFORM $(INC)
+CXXFLAGS = -std=gnu++11 -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib -Wall -Werror -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-error=deprecated-declarations -DESP_PLATFORM $(INC) $(INC_COMMON) $(INC_MAIN)
+
 
 LDFLAGS = -nostdlib -Map=$(@:.elf=.map) --cref
 LDFLAGS += --gc-sections -static -EL
@@ -127,6 +198,9 @@ else
 COPT += -Os -DNDEBUG
 #LDFLAGS += --gc-sections
 endif
+
+CFLAGS_BT := $(CFLAGS) $(INC_COMMON) $(INC_BT)
+CFLAGS += $(INC_COMMON) $(INC_MAIN)
 
 ################################################################################
 # List of MicroPython source and object files
@@ -157,6 +231,10 @@ SRC_C = \
 	machine_hw_spi.c \
 	mpthreadport.c \
 	$(SRC_MOD)
+
+ifeq ($(MICROPY_ESP32_BLUETOOTH),1)
+SRC_C += network_bluetooth.c
+endif
 
 ESP8266_SRC_C = $(addprefix esp8266/,\
 	modonewire.c \
@@ -241,7 +319,7 @@ ESPIDF_ESP32_O = $(addprefix $(ESPCOMP)/esp32/,\
 	gdbstub.o \
 	crosscore_int.o \
 	deep_sleep.o \
-	heap_alloc_caps.o \
+    heap_alloc_caps.o \
 	ipc.o \
 	int_wdt.o \
 	event_loop.o \
@@ -256,20 +334,15 @@ ESPIDF_ESP32_O = $(addprefix $(ESPCOMP)/esp32/,\
 	dport_access.o \
 	)
 
-ESPIDF_HEAP_O = $(addprefix $(ESPCOMP)/heap/,\
-	heap_caps.o \
-	heap_caps_init.o \
-	multi_heap.o \
-	)
 
 ESPIDF_SOC_O = $(addprefix $(ESPCOMP)/soc/,\
+    esp32/brownout.o \
 	esp32/cpu_util.o \
 	esp32/rtc_clk.o \
 	esp32/rtc_init.o \
 	esp32/rtc_pm.o \
 	esp32/rtc_sleep.o \
 	esp32/rtc_time.o \
-	esp32/soc_memory_layout.o \
 	)
 
 ESPIDF_CXX_O = $(addprefix $(ESPCOMP)/cxx/,\
@@ -434,6 +507,8 @@ ESPIDF_FREERTOS_O = $(addprefix $(ESPCOMP)/freertos/,\
 	croutine.o \
 	event_groups.o \
 	FreeRTOS-openocd.o \
+	heap_regions_debug.o \
+	heap_regions.o \
 	list.o \
 	portasm.o \
 	port.o \
@@ -713,6 +788,7 @@ OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_NVS_FLASH_O))
 OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_OPENSSL_O))
 OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_SPI_FLASH_O))
 OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_WPA_SUPPLICANT_O))
+
 ifeq ($(MICROPY_ESP32_BLUETOOTH),1)
 OBJ_ESPIDF += $(addprefix $(BUILD)/, $(ESPIDF_BLUETOOTH_O))
 endif 
