@@ -149,6 +149,9 @@
 #define mp_type_fileio                      fatfs_type_fileio
 #define mp_type_textio                      fatfs_type_textio
 
+// bluetooth configuration
+#define MICROPY_BLUETOOTH                   (1)
+
 // use vfs's functions for import stat and builtin open
 #define mp_import_stat mp_vfs_import_stat
 #define mp_builtin_open mp_vfs_open
@@ -167,6 +170,7 @@ extern const struct _mp_obj_module_t uos_module;
 extern const struct _mp_obj_module_t mp_module_usocket;
 extern const struct _mp_obj_module_t mp_module_machine;
 extern const struct _mp_obj_module_t mp_module_network;
+//extern const struct _mp_obj_module_t mp_module_NecIR;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_esp), (mp_obj_t)&esp_module }, \
