@@ -12,6 +12,7 @@ extern const mp_obj_type_t machine_pwm_type;
 extern const mp_obj_type_t machine_hw_spi_type;
 extern const mp_obj_type_t machine_uart_type;
 extern const mp_obj_type_t machine_necir_type;
+extern const mp_obj_type_t mp_machine_soft_spi_type;
 
 void machine_pins_init(void);
 void machine_pins_deinit(void);

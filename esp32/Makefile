@@ -87,7 +87,7 @@ INC += -I$(ESPCOMP)/xtensa-debug-module/include
 INC += -I$(ESPCOMP)/wpa_supplicant/include
 INC += -I$(ESPCOMP)/wpa_supplicant/port/include
 INC += -I$(ESPCOMP)/ethernet/include
-INC += -I$(ESPCOMP)/app_trace/include
+INC += -I$(ESPCOMP)/tcpip_adapter/include
 INC += -I$(ESPCOMP)/nghttp/include
 
 # Include dirs for both BT and MAIN
@@ -231,6 +231,7 @@ SRC_C = \
 	machine_hw_spi.c \
 	mpthreadport.c \
 	machine_necir.c \
+    modHZK.c \
 	$(SRC_MOD)
 
 ifeq ($(MICROPY_ESP32_BLUETOOTH),1)

@@ -45,6 +45,14 @@ ringbuf_t stdin_ringbuf = {stdin_ringbuf_array, sizeof(stdin_ringbuf_array)};
 int mp_hal_stdin_rx_chr(void) {
     for (;;) {
         int c = ringbuf_get(&stdin_ringbuf);
+
+        if((c&0xf0) == 0xe0){
+            int x,y;
+            x=ringbuf_get(&stdin_ringbuf);
+            y=ringbuf_get(&stdin_ringbuf);
+            c=(c<<16)+(x<<8)+y;
+        }
+
         if (c != -1) {
             return c;
         }
