@@ -2000,7 +2000,6 @@ mp_obj_t mp_obj_new_str_from_vstr(const mp_obj_type_t *type, vstr_t *vstr) {
     if (type == &mp_type_str) {
         qstr q = qstr_find_strn(vstr->buf, vstr->len);
         if (q != MP_QSTR_NULL) {
-			printf("q != MP_QSTR_NULL\n");
             vstr_clear(vstr);
             vstr->alloc = 0;
             return MP_OBJ_NEW_QSTR(q);

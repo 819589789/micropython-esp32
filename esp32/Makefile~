@@ -213,7 +213,7 @@ CFLAGS += $(INC_COMMON) $(INC_MAIN)
 
 ################################################################################
 # List of MicroPython source and object files
-
+#
 SRC_C = \
 	main.c \
 	uart.c \
@@ -247,7 +247,7 @@ SRC_C = \
 	mpthreadport.c \
 	machine_necir.c \
 	machine_iis.c \
-    modHZK.c \
+	modHZK.c \
 	modSD.c \
 	$(SRC_MOD)
 
