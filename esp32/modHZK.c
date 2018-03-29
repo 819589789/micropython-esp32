@@ -167,6 +167,14 @@ STATIC mp_obj_t mod_HZK_init(mp_obj_t _a, mp_obj_t _b) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_HZK_init_obj, mod_HZK_init);
 
 
+STATIC mp_obj_t mod_HZK_deinit() {
+    use_HZK = 0;
+    return mp_const_none;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_HZK_deinit_obj, mod_HZK_deinit);
+
+
 void ASCII_search(uint8_t ascii, void *zimo)
 {
     uint32_t addr;
@@ -174,7 +182,7 @@ void ASCII_search(uint8_t ascii, void *zimo)
         return;
     }
     //addr=(ascii-32)*16+0x3b7c0;
-	addr=(ascii-32)*16+0x27BFAA;
+	addr=(ascii-32)*16+GBEX0816ZF_ADDR;
     wbuf[1]=addr>>16; wbuf[2]=addr>>8; wbuf[3]=addr;
     gpio_set_level(hzk_pin->id, 0);
     mp_machine_soft_spi_transfer(&hzk_spi->base, 20, wbuf, rbuf);
@@ -295,6 +303,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_HZK_Unicode2GBK_obj, mod_HZK_Unicode2GBK);
 STATIC const mp_rom_map_elem_t HZK_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_HZK) },
     { MP_ROM_QSTR(MP_QSTR_init), MP_ROM_PTR(&mod_HZK_init_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_deinit), MP_ROM_PTR(&mod_HZK_deinit_obj) },
     { MP_ROM_QSTR(MP_QSTR_Unicode2GBK), MP_ROM_PTR(&mod_HZK_Unicode2GBK_obj) },
     { MP_ROM_QSTR(MP_QSTR_searchUnicode), MP_ROM_PTR(&mod_HZK_searchUnicode_obj) },
     { MP_ROM_QSTR(MP_QSTR_searchGBK), MP_ROM_PTR(&mod_HZK_searchGBK_obj) },
